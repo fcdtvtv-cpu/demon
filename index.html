@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOOL-X | SYSTEM ACCESS</title>
+    <title>System Error</title>
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background-color: #000;
-            color: #0f0; /* Зеленый цвет текста */
-            font-family: 'Courier New', Courier, monospace; /* Шрифт терминала */
+            color: #0f0; /* Зеленый цвет символов */
+            font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            height: 100vh;
         }
         
         /* Скрываем оригинальную картинку */
@@ -24,39 +25,16 @@
 
         /* Контейнер для ASCII-графики */
         pre {
-            font-size: 6px; /* Размер символов, чтобы влезло в экран */
-            line-height: 6px;
+            font-size: 4px; /* Размер символов (чем меньше, тем четче рожа) */
+            line-height: 4px;
             margin: 0;
             white-space: pre;
-            color: #0f0;
-            text-shadow: 0 0 2px #0f0; /* Легкое свечение как на старых мониторах */
-        }
-
-        .header {
-            font-size: 14px;
-            color: #0f0;
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 800px;
-            text-align: left;
-        }
-
-        .header-line {
-            color: #0ff; /* Голубые линии как на скрине */
+            color: #0f0; /* Зеленый */
+            text-shadow: 0 0 2px #0f0; /* Легкое свечение */
         }
     </style>
 </head>
 <body>
-
-    <!-- Шапка в стиле Tool-X -->
-    <div class="header">
-        <div class="header-line">=========================================================================</div>
-        <div>[+] SYSTEM HACKED. UNAUTHORIZED ACCESS DETECTED.</div>
-        <div>[+] DOWNLOADING USER DATA... 100% COMPLETE.</div>
-        <div>[+] TARGET LOCATION: TRACKING...</div>
-        <div class="header-line">=========================================================================</div>
-        <br>
-    </div>
 
     <!-- Здесь появится ASCII-рожа -->
     <pre id="ascii-output">Загрузка данных...</pre>
@@ -69,53 +47,59 @@
         const img = document.getElementById('sourceImage');
         const output = document.getElementById('ascii-output');
 
-        // Символы от самого темного к самому светлому
-        const density = 'Ñ@#W$9876543210?!abc;:+=-,._ ';
+        // Символы: сначала пробел (для темного фона), потом густые символы для рожи
+        const density = ' .:-=+*#%@';
 
         img.onload = function() {
-            // Создаем скрытый canvas для обработки картинки
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Уменьшаем картинку, чтобы ASCII-символы не были огромными
-            // Ширина 120 символов - оптимально для экрана
-            const width = 120;
+            // Ширина ASCII-картинки (количество символов в строке)
+            const width = 150; 
             const height = Math.floor((img.height / img.width) * width);
             
             canvas.width = width;
             canvas.height = height;
 
-            // Рисуем картинку на canvas
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Получаем данные о пикселях
             const imageData = ctx.getImageData(0, 0, width, height);
             const pixels = imageData.data;
 
             let asciiImage = '';
 
-            // Проходимся по каждому пикселю
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    // Индекс пикселя в массиве (R, G, B, A)
                     const offset = (y * width + x) * 4;
                     const r = pixels[offset];
                     const g = pixels[offset + 1];
                     const b = pixels[offset + 2];
+                    // Прозрачность
+                    const a = pixels[offset + 3];
 
-                    // Считаем среднюю яркость пикселя
+                    // Если пиксель прозрачный, рисуем пробел
+                    if (a < 128) {
+                        asciiImage += ' ';
+                        continue;
+                    }
+
+                    // Считаем яркость
                     const avg = (r + g + b) / 3;
 
-                    // Выбираем символ на основе яркости
-                    const charIndex = Math.floor((avg / 255) * (density.length - 1));
+                    // ИНВЕРТИРУЕМ ЯРКОСТЬ: 
+                    // Теперь белые пиксели (рожа) дадут высокий индекс (символы),
+                    // а черные (фон) дадут низкий индекс (пробелы).
+                    const brightness = 255 - avg; 
+                    
+                    // Ищем индекс символа
+                    const charIndex = Math.floor(((255 - brightness) / 255) * (density.length - 1));
                     const char = density[charIndex];
 
                     asciiImage += char;
                 }
-                asciiImage += '\n'; // Перенос строки
+                asciiImage += '\n';
             }
 
-            // Выводим результат на экран
             output.innerText = asciiImage;
         };
     </script>
